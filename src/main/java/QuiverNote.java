@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,6 +18,7 @@ import lombok.Data;
 public class QuiverNote {
     private static final String CONTENT_FILE_NAME = "content.json";
     private static final String META_FILE_NAME = "meta.json";
+    private static final String RESOURCES_DIRECTORY_NAME = "resources";
 
     /**
      * The unique identifier for this note.
@@ -66,7 +68,7 @@ public class QuiverNote {
      */
     public List<QuiverCell> getContent() {
         if (null == content) {
-            content = loadContent().getCells();
+            content = sanitizeResources(loadContent().getCells());
         }
 
         return content;
@@ -90,6 +92,18 @@ public class QuiverNote {
         } catch (IOException e) {
             throw new MalformedContentException(contentLocation.toString(), e);
         }
+    }
+
+    private List<QuiverCell> sanitizeResources(List<QuiverCell> content) {
+        String resourcesLocation = location.resolve(Paths.get(RESOURCES_DIRECTORY_NAME)).toString();
+
+        return content.stream().map(cell -> {
+            QuiverCell newCell = new QuiverCell(cell);
+            // Sanitize by replacing the Quiver url with the local resources folder
+            newCell.setData(newCell.getData().replaceAll("quiver-image-url", resourcesLocation));
+
+            return newCell;
+        }).collect(Collectors.toList());
     }
 
     /**

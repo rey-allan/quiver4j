@@ -1,4 +1,5 @@
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -62,5 +63,13 @@ public class QuiverNoteTest {
     public void given_invalid_content_when_get_content_is_called_throws_MalformedContentException() {
         QuiverNote note = new QuiverNote(Paths.get(getClass().getResource("invalid-content.qvnote").getFile()), mapper);
         note.getContent();
+    }
+
+    @Test
+    public void given_cells_with_images_when_get_content_is_called_resources_are_sanitized() {
+        QuiverNote note = new QuiverNote(Paths.get(getClass().getResource("note.qvnote").getFile()), mapper);
+
+        // The last cell has an image the URI of the image should be sanitized to the local resources folder
+        assertFalse(note.getContent().get(4).getData().contains("quiver-image-url"));
     }
 }

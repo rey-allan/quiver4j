@@ -43,4 +43,16 @@ public class QuiverCellTest {
         assertEquals("sequence", cell.getDiagramType());
         assertEquals("Title: Here is a title A->B: Normal line B-->C: Dashed line", cell.getData());
     }
+
+    @Test
+    public void given_another_instance_quiver_cell_is_copied() throws IOException {
+        String json = "{\"type\": \"text\",\"data\": \"<h3>Text Cell</h3>\"}";
+        QuiverCell other = mapper.readValue(json, QuiverCell.class);
+        QuiverCell cell = new QuiverCell(other);
+
+        assertEquals(other.getType(), cell.getType());
+        assertEquals(other.getData(), cell.getData());
+        assertEquals(other.getLanguage(), cell.getLanguage());
+        assertEquals(other.getDiagramType(), cell.getDiagramType());
+    }
 }
