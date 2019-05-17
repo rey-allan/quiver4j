@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import exceptions.MalformedContentException;
 import exceptions.MalformedMetadataException;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,5 +56,11 @@ public class QuiverNoteTest {
         // Make sure the content was loaded only once
         // The `mapper` should only be called two times: for the metadata, and for the first call to `getContent`
         verify(mapper, times(2)).readValue(any(File.class), (Class<?>) any(Class.class));
+    }
+
+    @Test(expected = MalformedContentException.class)
+    public void given_invalid_content_when_get_content_is_called_throws_MalformedContentException() {
+        QuiverNote note = new QuiverNote(Paths.get(getClass().getResource("invalid-content.qvnote").getFile()), mapper);
+        note.getContent();
     }
 }
