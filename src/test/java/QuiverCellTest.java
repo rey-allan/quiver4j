@@ -15,7 +15,7 @@ public class QuiverCellTest {
     }
 
     @Test
-    public void deserialize_text_cell() throws IOException {
+    public void given_json_representation_quiver_text_cell_is_deserialized() throws IOException {
         String json = "{\"type\": \"text\",\"data\": \"<h3>Text Cell</h3>\"}";
         QuiverCell cell = mapper.readValue(json, QuiverCell.class);
 
@@ -24,7 +24,7 @@ public class QuiverCellTest {
     }
 
     @Test
-    public void deserialize_code_cell() throws IOException {
+    public void given_json_representation_quiver_code_cell_is_deserialized() throws IOException {
         String json = "{\"type\": \"code\",\"language\": \"javascript\",\"data\":\"console.log('Hello!');\"}";
         QuiverCell cell = mapper.readValue(json, QuiverCell.class);
 
@@ -34,7 +34,7 @@ public class QuiverCellTest {
     }
 
     @Test
-    public void deserialize_diagram_cell() throws IOException {
+    public void given_json_representation_quiver_diagram_cell_is_deserialized() throws IOException {
         String json = "{\"type\": \"diagram\",\"diagramType\": \"sequence\"," +
                 "\"data\": \"Title: Here is a title A->B: Normal line B-->C: Dashed line\"}";
         QuiverCell cell = mapper.readValue(json, QuiverCell.class);
