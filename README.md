@@ -1,6 +1,27 @@
 # quiver4j
 :open_file_folder: A Java library for parsing [Quiver](http://happenapps.com/) libraries.
 
+![](https://img.shields.io/maven-central/v/com.reyallan/quiver4j.svg)
+
+## Installation
+
+### Maven
+
+```xml
+<dependency>
+  <groupId>com.reyallan</groupId>
+  <artifactId>quiver4j</artifactId>
+  <version>1.0.0</version>
+  <type>pom</type>
+</dependency>
+```
+
+### Gradle
+
+```groovy
+implementation 'com.reyallan:quiver4j:1.0.0'
+```
+
 ## Usage
 
 ```java
