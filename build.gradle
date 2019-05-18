@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'maven-publish'
+    id 'signing'
 }
 
 group 'com.reyallan.quiver4j'
@@ -17,4 +19,139 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.8'
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
+}
+
+// Configuration to publish to Maven Central
+// See: https://medium.com/@nmauti/sign-and-publish-on-maven-central-a-project-with-the-new-maven-publish-gradle-plugin-22a72a4bfd4b
+// See: https://medium.com/@nmauti/publishing-a-project-on-maven-central-8106393db2c3
+// See: https://debian-administration.org/article/451/Submitting_your_GPG_key_to_a_keyserver
+
+task sourceJar(type: Jar) {
+    classifier "sources"
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier "javadoc"
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives jar
+    archives sourceJar
+    archives javadocJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            customizePom(pom)
+            groupId 'com.reyallan'
+            artifactId 'quiver4j'
+            version '1.0.0'
+
+            from components.java
+
+            // Create the sign pom artifact
+            pom.withXml {
+                def pomFile = file("${project.buildDir}/generated-pom.xml")
+                writeTo(pomFile)
+                def pomAscFile = signing.sign(pomFile).signatureFiles[0]
+                artifact(pomAscFile) {
+                    classifier = null
+                    extension = 'pom.asc'
+                }
+            }
+
+            artifact(sourceJar) {
+                classifier = 'sources'
+            }
+            artifact(javadocJar) {
+                classifier = 'javadoc'
+            }
+
+            // create the signed artifacts
+            project.tasks.signArchives.signatureFiles.each {
+                artifact(it) {
+                    def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
+                    if (matcher.find()) {
+                        classifier = matcher.group(1)
+                    } else {
+                        classifier = null
+                    }
+                    extension = 'jar.asc'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username sonatypeUsername
+                password sonatypePassword
+            }
+        }
+    }
+}
+
+def customizePom(pom) {
+    pom.withXml {
+        def root = asNode()
+
+        // eliminate test-scoped dependencies (no need in maven central POMs)
+        root.dependencies.removeAll { dep ->
+            dep.scope == "test"
+        }
+
+        // add all items necessary for maven central publication
+        root.children().last() + {
+            resolveStrategy = DELEGATE_FIRST
+
+            description 'A Java library for parsing Quiver libraries'
+            name 'Quiver4J'
+            url 'https://github.com/rey-allan/quiver4j'
+            organization {
+                name 'com.reyallan'
+                url 'https://github.com/rey-allan'
+            }
+            issueManagement {
+                system 'GitHub'
+                url 'https://github.com/rey-allan/quiver4j/issues'
+            }
+            licenses {
+                license {
+                    name 'MIT'
+                    url 'https://github.com/rey-allan/quiver4j/blob/master/LICENSE'
+                    distribution 'repo'
+                }
+            }
+            scm {
+                url 'https://github.com/rey-allan/quiver4j'
+                connection 'scm:git:git://github.com/rey-allan/quiver4j.git'
+                developerConnection 'scm:git:ssh://git@github.com:rey-allan/quiver4j.git'
+            }
+            developers {
+                developer {
+                    name 'Allan Reyes'
+                }
+            }
+        }
+    }
+}
+
+model {
+    tasks.generatePomFileForMavenJavaPublication {
+        destination = file("$buildDir/generated-pom.xml")
+    }
+    tasks.publishMavenJavaPublicationToMavenLocal {
+        dependsOn project.tasks.signArchives
+    }
+    tasks.publishMavenJavaPublicationToMavenRepository {
+        dependsOn project.tasks.signArchives
+    }
 }
